@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hello WebSocket</title>
+    <script src="sockjs-0.3.4.js"></script>
+    <script src="stomp.js"></script>
+    <script type="text/javascript">
+        var stompClient = null;
+        
+        function setConnected(connected) {
+            document.getElementById('connect').disabled = connected;
+            document.getElementById('disconnect').disabled = !connected;
+            document.getElementById('conversationDiv').style.visibility = connected ? 'visible' : 'hidden';
+        }
+        
+        function connect() {
+            var socket = new SockJS('/hello');
+            stompClient = Stomp.over(socket);            
+            stompClient.connect({}, function(frame) {
+                setConnected(true);
+                console.log('Connected: ' + frame);
+                stompClient.subscribe('/topic/greetings', function(greeting){
+                    showTxDone(JSON.parse(greeting.body).content);
+                });
+            });
+        }
+        
+        function disconnect() {
+            if (stompClient != null) {
+                stompClient.disconnect();
+            }
+            setConnected(false);
+            console.log("Disconnected");
+        }
+        
+        function showTxDone(message) {
+            var circle = document.getElementById('greenCircle');
+            circle.setAttribute('visibility', 'visible');
+            document.getElementById('audiotag1').play();
+            setTimeout(function () {
+                circle.setAttribute('visibility', 'hidden');
+            }, 500);
+        }
+    </script>
+</head>
+<body onload="disconnect()">
+<noscript><h2 style="color: #ff0000">Seems your browser doesn't support Javascript! Websocket relies on Javascript being enabled. Please enable
+    Javascript and reload this page!</h2></noscript>
+<div>
+    <div>
+        <button id="connect" onclick="connect();">Connect</button>
+        <button id="disconnect" disabled="disabled" onclick="disconnect();">Disconnect</button>
+    </div>
+    <audio id="audiotag1" src="audio/cash-register-05.wav" preload="auto"></audio>
+    <div id="conversationDiv">
+        <svg height="100" width="100">
+            <circle id="greenCircle" cx="50" cy="50" r="40" stroke="black" stroke-width="3" fill="green" visibility="hidden"></circle>
+        </svg>
+    </div>
+</div>
+</body>
+</html>
